@@ -6,6 +6,7 @@ use App\Models\Note;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use PhpParser\Node\Stmt\Nop;
 
 class NoteController extends Controller
 {
@@ -16,7 +17,8 @@ class NoteController extends Controller
      */
     public function index()
     {
-        $notes = Note::where('user_id', Auth::id())->latest('updated_at')->get();
+        // $notes = Note::where('user_id', Auth::id())->latest('updated_at')->get();
+        $notes = Note::whereBelongsTo(Auth::user())->latest('updated_at')->paginate(5);
         return view('notes.index')->with('notes', $notes);
     }
 
@@ -43,11 +45,10 @@ class NoteController extends Controller
             'text' => 'required'
         ]);
 
-        Note::create([
+        Auth::user()->notes()->create([
             // Ensure you have the use statement for
             // Illuminate\Support\Str at the top of this file.
             'uuid' => Str::uuid(),
-            'user_id' => Auth::id(),
             'title' => $request->title,
             'text' => $request->text
         ]);
@@ -61,9 +62,12 @@ class NoteController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($uuid)
+    public function show(Note $note)
     {
-        $note = Note::where('uuid',$uuid)->where('user_id',Auth::id())->firstOrFail();
+        // $note = Note::where('uuid',$uuid)->where('user_id',Auth::id())->firstOrFail();
+        if(!$note->user->is(Auth::user())) {
+            return abort(403);
+        }
         return view('notes.show')->with('note', $note);
     }
 
@@ -75,7 +79,7 @@ class NoteController extends Controller
      */
     public function edit(Note $note)
     {
-        if($note->user_id !=Auth::id()) {
+        if(!$note->user->is(Auth::user())) {
             return abort(403);
         }
 
@@ -91,7 +95,7 @@ class NoteController extends Controller
      */
     public function update(Request $request, Note $note)
     {
-        if($note->user_id !=Auth::id()) {
+        if(!$note->user->is(Auth::user())) {
             return abort(403);
         }
 
@@ -116,7 +120,7 @@ class NoteController extends Controller
      */
     public function destroy(Note $note)
     {
-        if($note->user_id !=Auth::id()) {
+        if(!$note->user->is(Auth::user())) {
             return abort(403);
         }
 
