@@ -7,5 +7,4 @@
     @error($field)
         <div class="text-red-600 text-sm">{{ $message }}</div>
     @enderror
-
 </div>
