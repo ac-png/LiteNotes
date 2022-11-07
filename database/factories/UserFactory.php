@@ -17,6 +17,7 @@ class UserFactory extends Factory
      */
     public function definition()
     {
+        // Generates fake data for Users table.
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
